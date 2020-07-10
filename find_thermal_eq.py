@@ -61,12 +61,12 @@ def find_equilibrium(args):
 
 
 	#Calculating the starting net heat load on VCS1 and VCS2
-	VCS1 = 1
+	VCS1 = 1.
 	VCS2 = 1.1
 
 	#setting initial temperatures and flows -20C = 253.15
 	if config == 'TNG' or config=='TIM':
-		(T_SFT ,T_MT , T_VCS1 , T_VCS2, T_Shell) = (1.47, 4.2, 60, 170, args.VVTemp)
+		(T_SFT ,T_MT , T_VCS1 , T_VCS2, T_Shell) = (1.75, 4.2, 65, 170, args.VVTemp)
 	else:
 		(T_SFT ,T_MT , T_VCS1 , T_VCS2, T_Shell) = (1.5, 4.3, 40., 110., args.VVTemp)
 
@@ -169,21 +169,21 @@ def find_equilibrium(args):
 
 		if args.keller:
 
-			Rad_SFTtoMT, RadSFTtoVCS1, Rad_MT, Rad_VCS1, Rad_VCS2 = \
+			Rad_MTtoSFT, Rad_VCS1toSFT, Rad_MT, Rad_VCS1, Rad_VCS2 = \
 				mli_rad_keller(
 					T_SFT, T_MT, T_VCS1, T_VCS2, T_Shell,
 					p_ins1=args.pins1, p_ins2=args.pins2,
 					e_Al=0.15, alpha=0.15, beta=4.0e-3,
 					config=config, insNum=insNum)
-			Rad_SFT = Rad_SFTtoMT + RadSFTtoVCS1
+			Rad_SFT = Rad_MTtoSFT + Rad_VCS1toSFT
 			#Rad_VCS2 *= 1.5
 
 		else:
 			mli_load_VCS1, mli_load_VCS2 = mli_cond(T_VCS1, T_VCS2, T_Shell, config = config, insNum = insNum)
 
-			Rad_SFTtoMT, RadSFTtoVCS1, Rad_MT, Rad_VCS1, Rad_VCS2 = rad_load(T_SFT ,T_MT , T_VCS1 , T_VCS2, T_Shell,
+			Rad_MTtoSFT, Rad_VCS1toSFT, Rad_MT, Rad_VCS1, Rad_VCS2 = rad_load(T_SFT ,T_MT , T_VCS1 , T_VCS2, T_Shell,
 				e_Al=0.15, alpha=0.15, beta=4.0e-3, config = config, insNum = insNum)
-			Rad_SFT = Rad_SFTtoMT + RadSFTtoVCS1
+			Rad_SFT = Rad_MTtoSFT + Rad_VCS1toSFT
 
 			Rad_VCS1 += mli_load_VCS1  #is this appropriate?  some of this goes to cooling, should all of it?
 			Rad_VCS2 += mli_load_VCS2
@@ -274,7 +274,7 @@ def find_equilibrium(args):
 			ocsCryocooler = 0
 
 		VCS1 = Rad_VCS1 + window_VCS1 \
-				-Rad_MT - RadSFTtoVCS1 - gasCoolingVCS1 - icsCryocooler \
+				-Rad_MT - Rad_VCS1toSFT - gasCoolingVCS1 - icsCryocooler \
 				-MTexcess
 
 		VCS1 += flexCondLoad_VCS1 + tubeCondLoad_VCS1 + VCS1excess + VCS1excessShell
@@ -345,8 +345,8 @@ def find_equilibrium(args):
 			print('mdot (g/s): %1.3f, Holdtime (days): %1.3f ' % (mdot, holdtime(mdot, numLiters = numLiters)))
 			print('boil-off rate (L/day): %1.3f ' % (numLiters/holdtime(mdot, numLiters=numLiters)))
 
-			print('SLPM (from MT/l): %1.3f ' % (mdot2SLPM(mdot)))
-			print('SLPM (from MTLoad/l): %1.3f ' % (mdot2SLPM(mdot2)))
+			print('SLPM (from MT)(L/min): %1.3f ' % (mdot2SLPM(mdot)))
+			print('SLPM (from MTLoad)(L/min): %1.3f ' % (mdot2SLPM(mdot2)))
 
 			print('MT power: %1.3f W' % (MT))
 			print('MTLoad power: %1.3f W' % (MTLoad))

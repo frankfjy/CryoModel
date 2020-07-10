@@ -20,22 +20,24 @@ def pbronze_cv(tin):
 	# Phosphor Bronze thermal conductivity [W/m-K]
 	t=[4,10.0,20.0,80.0,150.0,300.0]
 	k=[1.6,4.6,10.0,25.0,34.0,48.0]
-	f = interp1d(t,k,'quadratic')
+	f = interp1d(t,k,'quadratic', bounds_error=False,fill_value=1.6)
 	return f(tin)
 
 def manganin_cv(tin):
 	t=[4.0,10.0,20.0,80.0,150.0,300.0]
 	k=[0.5,2.0,3.3,13.0,16.0,22.0]
-	f = interp1d(t,k,'quadratic')
+	f = interp1d(t,k,'quadratic', bounds_error=False, fill_value=0.5)
 	return f(tin)
 
-def copper_cv(tin):
+def copper_cv(tin, RRR=50):
 	# assumes RRR=50
 	t=[4.0,10.0,20.0,80.0,150.0,300.0]
 	# k=[9.0,30.0,70.0,300.0,700.0,1100.0,600.0,410.0,400.0]
-	k = [638.0, 1540.0, 2423.0, 529.0, 418.0, 396.0] # RRR = 100
-	# k = [318.0,778.0,1368.0,500.0,408.0,392.0] # RRR = 50
-	f = interp1d(t,k,'quadratic')
+	if RRR == 100:
+		k = [638.0, 1540.0, 2423.0, 529.0, 418.0, 396.0] # RRR = 100
+	elif RRR == 50:
+		k = [318.0,778.0,1368.0,500.0,408.0,392.0] # RRR = 50
+	f = interp1d(t,k,'quadratic', bounds_error=False, fill_value=300)
 
 	return f(tin)
 
@@ -142,19 +144,19 @@ def load_funci(kfunc, rfunc, hstemps, lengths, aol, current):
 
 def wire_info(material, length, gauge=None, Rtarget=None, Npins=1,
 			  N=1, sink_points={'mt':0,'vv_mt':1}, current=None):
-	if material is 'manganin':
+	if material == 'manganin':
 		rfunc = manganin_rho
 		kfunc = manganin_cv
 		gauge0 = 36
-	elif material is 'pbronze':
+	elif material == 'pbronze':
 		rfunc = pbronze_rho
 		kfunc = pbronze_cv
 		gauge0 = 36
-	elif material is 'copper':
+	elif material == 'copper':
 		rfunc = copper_rho
 		kfunc = copper_cv
 		gauge0 = 30
-	elif material is 'aluminum':
+	elif material == 'aluminum':
 		rfunc = alum_rho
 		kfunc = al6061_cv
 		gauge0 = 10
@@ -211,10 +213,10 @@ def wire_info(material, length, gauge=None, Rtarget=None, Npins=1,
 	# L = P*Tflight/H
 
 def shield_info(material, length, width, thickness=0.005):
-	if material is 'aluminum':
+	if material == 'aluminum':
 		kfunc = al6061_cv
 		thick0 = 0.005
-	elif material is 'mylar':
+	elif material == 'mylar':
 		kfunc = al6061_cv
 		thick0 = 0.001
 

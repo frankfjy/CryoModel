@@ -90,16 +90,19 @@ class Fridge(ThermalLink):
     added to the stages as loads on stages are specified to external loads.
     '''
 
-    def __init__(self, stp = 8, heaterE=5000, no_load_time=48*3600, cycle_time=2*3600,\
+    def __init__(self, stp = 8, heaterE=5000, no_load_time=48*3600, recycle_time=2*3600,\
         FPU_heat_cap=2.74, **kwargs):
         '''
         stp [L]: Helium 3 volume in stp liters
         heaterE [J]: Energy from the fridge heaters in one cycle
         no_load_time [s]: Hold time of the fridge still when there is no external loads
-        cycle_time [s]: Time to cycle the fridge, i.e. time that still is not at operating temp
+        recycle_time [s]: Time to cycle the fridge, i.e. time that still is not at operating temp
         FPU_heat_cap [J]: Energy needed to cool the cold element at the begining 
         of each cycle(from 4k to 0.3k), 
-        2.74 = 2.5(two and half module)* 0.58(volume) * 2.7(Al density) * 0.7(Al Enthalpy[J/kg] at 4K) 
+        Noted that the default value of 2.74J is estimated as: \
+        2.74 = 2.5(two and half module)* 0.58(volume in L) * 2.7(Al density) * 0.7(Al Enthalpy[J/kg] at 4K) 
+        Here we are using a upper bound of the Al Enthalpy at 4K from: \
+        https://arxiv.org/ftp/arxiv/papers/1501/1501.07100.pdf Fig.3
         '''
         
         super().__init__(**kwargs)
@@ -112,7 +115,7 @@ class Fridge(ThermalLink):
         self.para_load = self.coldE/no_load_time  # still parasitic load in W
         self.FPU_heat_cap = FPU_heat_cap
 
-        self.cycle_time = cycle_time
+        self.recycle_time = recycle_time
         
     def getStillLoad(self):
         self.still_load = self.s2.load + self.para_load
@@ -191,7 +194,7 @@ class ThermalSystem(object):
         for link in self.linkages:
             if link.type == 'Fridge':
                 print('  Link: %10s\t'%link.name,'Avg MT Load: ', uprint(link.cycle_flux, fmt='%6.3f'),                     '')
-                print('  Hold Time: %2.2f h\t'%(link.hold_time/3600), 'Cycle Efficiency: %2.3f \t'%(1 - link.cycle_time/link.hold_time))
+                print('  Hold Time: %2.2f h\t'%(link.hold_time/3600), 'Cycle Efficiency: %2.3f \t'%(1 - link.recycle_time/link.hold_time))
                 print('  Ext Load: %s\t'%uprint(link.s2.load, fmt='%4.2f'), 'Parasitic Load: %s\t'%uprint(link.para_load, fmt='%4.2f') )
                 print('  Flowrate when cycle: %2.3f g/s'%(link.heaterE/(2*3600)/l))
                 
